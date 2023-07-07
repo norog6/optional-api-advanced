@@ -30,7 +30,6 @@ public class Main {
      * @param amount       money to deposit
      */
     public static void deposit(UserProvider userProvider, BigDecimal amount) {
-
         userProvider.getUser().ifPresent(user->user.setBalance(user.getBalance().add(amount)));
     }
 
@@ -64,8 +63,7 @@ public class Main {
      * @param userService
      */
     public static void processUser(UserProvider userProvider, UserService userService) {
-         userProvider.getUser().ifPresentOrElse(user->userService.processUser(user),
-                 ()->userService.processWithNoUser());
+        userProvider.getUser().ifPresentOrElse(userService::processUser, userService::processWithNoUser);
     }
 
     /**
@@ -78,7 +76,6 @@ public class Main {
     public static User getOrGenerateUser(UserProvider userProvider) {
         Optional<User> optionalUser = userProvider.getUser();
         return   userProvider.getUser().orElse(Users.generateUser());
-
     }
 
     /**
@@ -154,7 +151,6 @@ public class Main {
      * @return the lowest balance values
      */
     public static OptionalDouble findMinBalanceValue(List<User> users) {
-
                return users.stream().mapToDouble(user -> user.getBalance().doubleValue()).min();
     }
 
