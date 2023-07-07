@@ -31,7 +31,7 @@ public class Main {
      */
     public static void deposit(UserProvider userProvider, BigDecimal amount) {
 
-        userProvider.getUser().ifPresent(x->x.setBalance(x.getBalance().add(amount)));
+        userProvider.getUser().ifPresent(user->user.setBalance(user.getBalance().add(amount)));
     }
 
     /**
@@ -64,11 +64,8 @@ public class Main {
      * @param userService
      */
     public static void processUser(UserProvider userProvider, UserService userService) {
-        if (userProvider.getUser().isPresent()) {
-            userService.processUser(userProvider.getUser().get());
-        } else {
-            userService.processWithNoUser();
-        }
+         userProvider.getUser().ifPresentOrElse(user->userService.processUser(user),
+                 ()->userService.processWithNoUser());
     }
 
     /**
@@ -80,11 +77,8 @@ public class Main {
      */
     public static User getOrGenerateUser(UserProvider userProvider) {
         Optional<User> optionalUser = userProvider.getUser();
-        if (optionalUser.isPresent()) {
-            return optionalUser.get();
-        } else {
-            return Users.generateUser();
-        }
+        return   userProvider.getUser().orElse(Users.generateUser());
+
     }
 
     /**
@@ -94,8 +88,7 @@ public class Main {
      * @return optional balance
      */
     public static Optional<BigDecimal> retrieveBalance(UserProvider userProvider) {
-        Optional<User> optionalUser = userProvider.getUser();
-        return optionalUser.map(User::getBalance);
+        return userProvider.getUser().map(User::getBalance);
     }
 
     /**
@@ -116,7 +109,7 @@ public class Main {
      * @return optional credit balance
      */
     public static Optional<BigDecimal> retrieveCreditBalance(UserBankAccountProvider userBankAccountProvider) {
-        return userBankAccountProvider.getUserBankAccount().map(UserBankAccount::getCreditBalance).get();
+        return userBankAccountProvider.getUserBankAccount().flatMap(UserBankAccount::getCreditBalance);
     }
 
 
@@ -138,18 +131,7 @@ public class Main {
      * @return user got from either userProvider or fallbackProvider
      */
     public static User getUserWithFallback(UserProvider userProvider, UserProvider fallbackProvider) {
-        Optional<User> optionalUser = userProvider.getUser();
-        if (optionalUser.isPresent()) {
-            return optionalUser.get();
-        } else {
-            Optional<User> fallbackUser = fallbackProvider.getUser();
-            if (fallbackUser.isPresent()) {
-                return fallbackUser.get();
-
-            } else {
-                throw new NoSuchElementException("No User provided by both providers!");
-            }
-        }
+        return userProvider.getUser().or(fallbackProvider::getUser).orElseThrow(NoSuchElementException::new);
     }
 
     /**
@@ -184,6 +166,6 @@ public class Main {
      * @return total credit balance
      */
     public static double calculateTotalCreditBalance(List<UserBankAccount> bankAccounts) {
-        return bankAccounts.stream().mapToDouble(account->account.getCreditBalance().get().doubleValue()).sum();
+        return bankAccounts.stream().mapToDouble(account->account.getCreditBalance().orElse(BigDecimal.ZERO).doubleValue()).sum();
     }
 }
