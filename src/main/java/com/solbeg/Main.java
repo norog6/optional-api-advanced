@@ -172,7 +172,7 @@ public class Main {
      * @return the lowest balance values
      */
     public static OptionalDouble findMinBalanceValue(List<User> users) {
-       // return users.stream().min(Comparator.comparing(user -> user.getBalance().doubleValue()));
+
                return users.stream().mapToDouble(user -> user.getBalance().doubleValue()).min();
     }
 
